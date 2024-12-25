@@ -1,0 +1,49 @@
+# Root-level ignores
+*.log
+*.tmp
+*.temp
+*.env
+.DS_Store
+Thumbs.db
+
+# Ignore for .NET API project (Youtube_Video_Downloader_Backend)
+/Youtube_Video_Downloader_Backend/bin/
+/Youtube_Video_Downloader_Backend/obj/
+/Youtube_Video_Downloader_Backend/.vs/
+/Youtube_Video_Downloader_Backend/*.user
+/Youtube_Video_Downloader_Backend/*.suo
+/Youtube_Video_Downloader_Backend/*.sln.docstates
+/Youtube_Video_Downloader_Backend/*.apphost
+/Youtube_Video_Downloader_Backend/*.nuget.targets
+
+# Ignore lock files and package directories
+/Youtube_Video_Downloader_Backend/packages/
+/Youtube_Video_Downloader_Backend/project.lock.json
+/Youtube_Video_Downloader_Backend/project.fragment.lock.json
+
+# ASP.NET specific ignores
+/Youtube_Video_Downloader_Backend/wwwroot/
+/Youtube_Video_Downloader_Backend/App_Data/
+/Youtube_Video_Downloader_Backend/App_Start/
+/Youtube_Video_Downloader_Backend/Properties/launchSettings.json
+
+# Ignore for Angular project (Youtube_Video_Downloader_Frontend)
+/Youtube_Video_Downloader_Frontend/node_modules/
+/Youtube_Video_Downloader_Frontend/dist/
+/Youtube_Video_Downloader_Frontend/build/
+/Youtube_Video_Downloader_Frontend/.angular/
+/Youtube_Video_Downloader_Frontend/.cache/
+/Youtube_Video_Downloader_Frontend/.tmp/
+/Youtube_Video_Downloader_Frontend/.env
+
+# IDE-specific ignores for VS Code
+/Youtube_Video_Downloader_Frontend/.vscode/settings.json
+/Youtube_Video_Downloader_Frontend/.vscode/tasks.json
+/Youtube_Video_Downloader_Frontend/.vscode/launch.json
+/Youtube_Video_Downloader_Frontend/.vscode/*.code-workspace
+/Youtube_Video_Downloader_Frontend/.vscode/extensions.json
+
+# Logs
+/Youtube_Video_Downloader_Frontend/npm-debug.log*
+/Youtube_Video_Downloader_Frontend/yarn-error.log
+/Youtube_Video_Downloader_Frontend/pnpm-debug.log*
