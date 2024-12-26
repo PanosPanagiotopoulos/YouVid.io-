@@ -1,24 +1,29 @@
+import { HttpParams } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import axios from "axios";
+import { ApiService } from "./api.service";
 
 @Injectable({
   providedIn: "root",
 })
 export class YoutubeService {
-  constructor() {}
+  constructor(private apiService: ApiService) {}
 
   // This method uses axios and directly handles the file download
   async downloadVideo(url: string): Promise<void> {
     try {
       // Call the API endpoint with axios
-      const response = await axios.get(
-        `https://localhost:7076/api/video/download?url=${encodeURIComponent(
-          url
-        )}`,
+      const response = await this.apiService.axiosInstance.get(
+        "/video/download",
         {
-          responseType: "arraybuffer", // Receive binary data
+          params: {
+            url,
+          },
+          responseType: "arraybuffer",
         }
       );
+
+      console.log(JSON.stringify(response));
 
       // Extract the filename from the response headers (if present)
       let filename = "video.mp4";
@@ -27,6 +32,7 @@ export class YoutubeService {
         const matches = /filename\*?=(?:UTF-8''|")?([^;"]+)/.exec(
           contentDisposition
         );
+
         if (matches && matches[1]) {
           filename = decodeURIComponent(matches[1].replace(/['"]/g, ""));
         }
@@ -45,7 +51,7 @@ export class YoutubeService {
       document.body.removeChild(anchor);
       window.URL.revokeObjectURL(downloadUrl);
     } catch (error) {
-      console.error("Error downloading video:", error);
+      console.error("Error downloading video:", JSON.stringify(error, null, 2));
       throw error;
     }
   }

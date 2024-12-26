@@ -1,0 +1,22 @@
+services:
+  backend:
+    build:
+      context: ./Youtube_Video_Downloader_Backend
+    ports:
+      - "7076:7076"
+    container_name: backend-api
+    networks:
+      - app-network
+
+  frontend:
+    build:
+      context: ./Youtube_Video_Downloader_Frontend
+    ports:
+      - "5000:80"
+    container_name: frontend-app
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

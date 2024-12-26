@@ -16,11 +16,11 @@ builder.Host.UseSerilog();
 
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(policy =>
+    options.AddDefaultPolicy(builder =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
+        builder.WithOrigins("http://localhost:5000") // Frontend origin
+               .AllowAnyHeader()
+               .AllowAnyMethod();
     });
 });
 
@@ -33,6 +33,8 @@ builder.Services.AddSwaggerGen();
 // Services
 builder.Services.AddScoped<VideoProcessingService>();
 
+builder.WebHost.UseUrls("http://0.0.0.0:7076");
+
 
 WebApplication app = builder.Build();
 
@@ -43,20 +45,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
-//app.UseStaticFiles(); // Serve static files from wwwroot by default
-
-// Serve Static Files from Angular Dist Folder**
-/*app.UseStaticFiles(new StaticFileOptions
-{
-    FileProvider = new PhysicalFileProvider(
-        Path.Combine(Directory.GetParent(Directory.GetCurrentDirectory()).FullName, "E-Commerce-Application-UI", "dist", "e-commerce-app", "browser")),
-    RequestPath = ""
-}); */
-
-// **Add Routing**
-//app.UseRouting(); 
 
 // Add cores to the project
 app.UseCors();
@@ -65,18 +55,5 @@ app.UseCors();
 app.UseAuthorization();
 
 app.MapControllers();
-// **Map API Controllers**
-//app.UseEndpoints(endpoints =>
-//{
-/*    endpoints.MapControllers();
-
-    // **Catch-All Route for Angular**
-    endpoints.MapFallbackToFile("index.html", new StaticFileOptions
-    {
-        FileProvider = new PhysicalFileProvider(
-            Path.Combine(Directory.GetParent(Directory.GetCurrentDirectory()).FullName, "E-Commerce-Application-UI", "dist", "e-commerce-app", "browser")),
-    });
-});*/
-
 
 app.Run();
