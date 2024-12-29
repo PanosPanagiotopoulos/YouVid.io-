@@ -16,7 +16,9 @@
     "@angular/platform-browser-dynamic": "^18.1.0",
     "@angular/router": "^18.1.0",
     "axios": "^1.7.9",
+    "file-saver": "^2.0.5",
     "gsap": "^3.12.5",
+    "install": "^0.13.0",
     "rxjs": "^7.8.1",
     "three": "^0.160.1",
     "tslib": "^2.5.0",
@@ -26,6 +28,7 @@
     "@angular-devkit/build-angular": "^18.1.0",
     "@angular/cli": "^18.1.0",
     "@angular/compiler-cli": "^18.1.0",
+    "@types/file-saver": "^2.0.7",
     "@types/three": "^0.160.0",
     "typescript": "~5.5.0"
   }

@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Serilog;
+using YoutubeExplode.Videos.Streams;
+using YouVid.io___Youtube_Video_Downloader.Models;
 using YouVid.io___Youtube_Video_Downloader.Services;
 
 namespace YouVid.io___Youtube_Video_Downloader.Controllers
@@ -8,49 +10,84 @@ namespace YouVid.io___Youtube_Video_Downloader.Controllers
     [Route("api/video")]
     public class VideoProcessController : ControllerBase
     {
-        private readonly VideoProcessingService _youtubeService;
+        private readonly YoutubeService _youtubeService;
 
-        public VideoProcessController(VideoProcessingService youtubeService)
+        public VideoProcessController(YoutubeService youtubeService2)
         {
-            _youtubeService = youtubeService;
+            _youtubeService = youtubeService2;
         }
 
-        /// <summary>
-        /// Downloads a video from the specified URL.
-        /// </summary>
-        /// <param name="url">The URL of the video to download.</param>
-        /// <returns>The downloaded video file.</returns>
         [HttpGet("download")]
-        public async Task<IActionResult> DownloadVideo([FromQuery] string? url)
+        public async Task<IActionResult> DownloadVideo([FromQuery] VideoDownloadSettings videoDownloadSettings)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
-
-            if (string.IsNullOrEmpty(url) || string.IsNullOrWhiteSpace(url.Trim()))
+            if (!ModelState.IsValid)
             {
+                Log.Error("Faulty Model State Data");
+                return BadRequest(ModelState);
+            }
+
+            if (string.IsNullOrEmpty(videoDownloadSettings.Url) || string.IsNullOrWhiteSpace(videoDownloadSettings.Url.Trim()))
+            {
+                Log.Error("Not Valid URL sent to download");
                 ModelState.AddModelError("error", "Not Valid URL sent to download");
+                return BadRequest(ModelState);
+            }
+
+            if (videoDownloadSettings.Settings == default(ProcessSettings))
+            {
+                Log.Error("Not Process settings to process");
+                ModelState.AddModelError("error", "Not Valid Process Setting sent to process");
                 return BadRequest(ModelState);
             }
 
             try
             {
-                // Get the video ID from the URL
-                string videoId = _youtubeService.GetYoutubeVideoIdFromUrl(url);
+                // Create a VideoDownloadPreference object
+                Container preferredContainer = Container.Mp4; // Choose MP4 as the preferred container
+                VideoQualityPreference preferredQuality = VideoQualityPreference.Highest; // Choose up to 1080p quality
 
-                // Get the video stream and original title
-                (Stream videoStream, string videoTitle) = await _youtubeService.Get(videoId);
+                VideoDownloadPreference videoDownloadPreference = new VideoDownloadPreference(preferredContainer, preferredQuality);
+                // Process and retrieve video response
+                VideoResponse result = await _youtubeService.DownloadVideoDataAsync
+                    (
+                        videoDownloadSettings,
+                        videoDownloadPreference
+                    );
 
-                // Return the video file with the original title
-                return File(videoStream, "video/mp4", $"{videoTitle}-enhanced.mp4");
+                Log.Information($"Serving video: {result.VideoTitle}");
+
+                // Set the Content-Disposition header to indicate the file name in the browser
+                Response.Headers.Append("Accept-Ranges", "bytes");
+                Response.Headers.Append("Cache-Control", "no-store");
+                if (!Response.Headers.ContainsKey("Content-Disposition"))
+                {
+                    Response.Headers.Append("Content-Disposition", $"attachment; filename=\"{result.VideoTitle}\"");
+                }
+
+                else Response.Headers["Content-Disposition"] = $"attachment; filename=\"{result.VideoTitle}\"";
+
+
+                // Ensure the stream is at the beginning
+                result.VideoStream.Seek(0, SeekOrigin.Begin);
+
+                return File(result.VideoStream, result.MimeType!, enableRangeProcessing: false);
+            }
+            catch (InvalidOperationException ioe)
+            {
+                Log.Error(ioe, $"An error occurred while processing the video: {ioe.Message}");
+                ModelState.AddModelError("error", ioe.Message);
+                return NotFound(ModelState);
+            }
+            catch (IOException ioex)
+            {
+                Log.Error(ioex, $"An IO error occurred while downloading the video: {ioex.Message}");
+                // Do not return BadRequest for IO exceptions, just log the error
+                return StatusCode(500, "An error occurred while processing the video.");
             }
             catch (Exception ex)
             {
-                // Log the error
                 Log.Error(ex, $"An error occurred while downloading the video: {ex.Message}");
-
-                // Add the error message to the model state
                 ModelState.AddModelError("error", ex.Message);
-
-                // Return the error message
                 return BadRequest(ModelState);
             }
         }

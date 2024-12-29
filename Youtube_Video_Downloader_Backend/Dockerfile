@@ -16,8 +16,8 @@ RUN dotnet publish -c Release -o out
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 
-# Install ffmpeg
-RUN apt-get update && apt-get install -y ffmpeg
+# Install ffmpeg and yt-dlp
+RUN apt-get update && apt-get install -y ffmpeg wget
 
 # Copy the built application
 COPY --from=build /app/out .

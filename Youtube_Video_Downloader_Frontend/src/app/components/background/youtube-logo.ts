@@ -1,53 +1,73 @@
 import * as THREE from 'three';
 
 export class YouTubeLogo {
-  private mesh: THREE.Group;
-  
+  private group: THREE.Group;
+
   constructor(scene: THREE.Scene) {
-    // Create YouTube logo group
-    this.mesh = new THREE.Group();
-    
-    // Create the main red rectangle
-    const bodyGeometry = new THREE.BoxGeometry(9, 6, 0.5);
-    const bodyMaterial = new THREE.MeshPhongMaterial({
-      color: 0xFF0000,
-      specular: 0x555555,
-      shininess: 30
+    this.group = new THREE.Group();
+
+    // Create the main rectangle with beveled edges
+    const rectGeometry = new THREE.BoxGeometry(9, 6, 1);
+    const rectMaterial = new THREE.MeshPhysicalMaterial({ 
+      color: 0xff0000,
+      metalness: 0.5,
+      roughness: 0.2,
+      clearcoat: 1.0,
+      clearcoatRoughness: 0.1
     });
-    const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-    
-    // Create the white play button
+    const rect = new THREE.Mesh(rectGeometry, rectMaterial);
+
+    // Create the play button triangle
     const triangleShape = new THREE.Shape();
-    triangleShape.moveTo(0, 0);
-    triangleShape.lineTo(2, 1.5);
-    triangleShape.lineTo(0, 3);
-    triangleShape.lineTo(0, 0);
-    
-    const triangleGeometry = new THREE.ShapeGeometry(triangleShape);
-    const triangleMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF });
-    const playButton = new THREE.Mesh(triangleGeometry, triangleMaterial);
-    
-    playButton.position.set(-0.5, 0, 0.3);
-    
-    // Add meshes to group
-    this.mesh.add(body);
-    this.mesh.add(playButton);
-    
-    // Position the logo
-    this.mesh.position.set(0, -8, -2);
-    this.mesh.scale.set(1.5, 1.5, 1.5);
-    
+    triangleShape.moveTo(-1.5, -1.0);
+    triangleShape.lineTo(-1.5, 1.0);
+    triangleShape.lineTo(1.5, 0);
+    triangleShape.lineTo(-1.5, -1.0);
+
+    const triangleGeometry = new THREE.ExtrudeGeometry(triangleShape, {
+      depth: 0.5,
+      bevelEnabled: true,
+      bevelThickness: 0.2,
+      bevelSize: 0.1,
+      bevelSegments: 3
+    });
+
+    const triangleMaterial = new THREE.MeshPhysicalMaterial({ 
+      color: 0xffffff,
+      metalness: 0.3,
+      roughness: 0.4
+    });
+
+    const triangle = new THREE.Mesh(triangleGeometry, triangleMaterial);
+    triangle.position.z = 0.05;
+
     // Add lighting
-    const light = new THREE.DirectionalLight(0xffffff, 1);
-    light.position.set(5, 5, 5);
-    scene.add(light);
+    const pointLight1 = new THREE.PointLight(0xff0000, 1, 50);
+    pointLight1.position.set(5, 5, 5);
     
-    scene.add(this.mesh);
+    const pointLight2 = new THREE.PointLight(0xffffff, 0.8, 50);
+    pointLight2.position.set(-5, -5, 5);
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+
+    // Add everything to the group
+    this.group.add(rect);
+    this.group.add(triangle);
+    this.group.add(pointLight1);
+    this.group.add(pointLight2);
+    this.group.add(ambientLight);
+
+    // Position the logo under the search input
+    this.group.position.set(0, 10, -15);
+    
+    scene.add(this.group);
   }
 
   update() {
-    // Gentle floating motion
-    this.mesh.position.y += Math.sin(Date.now() * 0.001) * 0.005;
-    this.mesh.rotation.y += 0.002;
+    // Continuous 360-degree rotation on Y-axis
+    this.group.rotation.y += 0.02;
+    
+    // Add subtle floating motion
+    this.group.position.y = 2 + Math.sin(Date.now() * 0.001) * 0.3;
   }
 }

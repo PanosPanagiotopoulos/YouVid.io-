@@ -13,16 +13,21 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 // - Logger //
 
+//builder.Services.Configure<KestrelServerOptions>(options =>
+//{
+//    options.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(5);
+//    options.Limits.RequestHeadersTimeout = TimeSpan.FromMinutes(5);
+//});
 
-builder.Services.AddCors(options =>
-{
-    options.AddDefaultPolicy(builder =>
-    {
-        builder.WithOrigins("http://localhost:5000") // Frontend origin
-               .AllowAnyHeader()
-               .AllowAnyMethod();
-    });
-});
+//builder.Services.AddCors(options =>
+//{
+//    options.AddDefaultPolicy(builder =>
+//    {
+//        builder.WithOrigins("http://localhost:5000") // Frontend origin
+//               .AllowAnyHeader()
+//               .AllowAnyMethod();
+//    });
+//});
 
 // Add services to the container.
 
@@ -31,9 +36,10 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // Services
-builder.Services.AddScoped<VideoProcessingService>();
+builder.Services.AddScoped<YoutubeService>();
 
-builder.WebHost.UseUrls("http://0.0.0.0:7076");
+
+//builder.WebHost.UseUrls("http://0.0.0.0:7076");
 
 
 WebApplication app = builder.Build();
@@ -45,11 +51,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-//app.UseHttpsRedirection();
+app.UseHttpsRedirection();
 
 
 // Add cores to the project
-app.UseCors();
+//app.UseCors();
 
 
 app.UseAuthorization();
