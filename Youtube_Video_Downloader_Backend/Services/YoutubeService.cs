@@ -13,7 +13,14 @@
         string tempDir = Path.GetTempPath();
         public YoutubeService()
         {
-            _youtubeClient = new YoutubeClient();
+            // Create an instance of CookieService
+            CookieService cookieService = new CookieService("cookies.json");
+
+            // Get an HttpClient with cookies
+            HttpClient httpClient = cookieService.GetHttpClientWithCookies();
+
+            // Initialize YoutubeClient with the configured HttpClient
+            _youtubeClient = new YoutubeClient(httpClient);
         }
 
         public async Task<VideoResponse> DownloadVideoDataAsync(
