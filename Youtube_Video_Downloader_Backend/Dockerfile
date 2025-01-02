@@ -20,7 +20,9 @@ ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 
 COPY . .
-COPY ["Youtube_Video_Downloader_Backend.sln", "."]
+COPY ["Youtube_Video_Downloader_Backend/Youtube_Video_Downloader_Backend.csproj", "."]
+COPY ["Youtube_Video_Downloader_Backend/Youtube_Video_Downloader_Backend.sln", "."]
+RUN dotnet restore "./Youtube_Video_Downloader_Backend.csproj"
 RUN dotnet restore "./Youtube_Video_Downloader_Backend.sln"
 WORKDIR "/src/."
 RUN dotnet build "./Youtube_Video_Downloader_Backend.csproj" -c $BUILD_CONFIGURATION -o /app/build
