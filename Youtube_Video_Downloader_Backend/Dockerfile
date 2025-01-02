@@ -6,13 +6,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg wget \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
-WORKDIR /
+WORKDIR /src
 
-# Copy the .csproj file(s) and restore dependencies
-COPY *.csproj ./
-RUN dotnet restore  
+COPY ["Youtube_Video_Downloader_Backend.csproj", "."]
+RUN dotnet restore "./Youtube_Video_Downloader_Backend.csproj"
 # Copy the remaining source code
-COPY . ./
+COPY . .
 RUN dotnet publish -c Release -o out
 
 # Final stage: runtime image
@@ -23,7 +22,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
-WORKDIR /app
+WORKDIR /src/.
 
 # Copy the certificate for HTTPS
 COPY certificate.pfx /app/certificate.pfx
