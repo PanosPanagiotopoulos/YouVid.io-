@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg wget \
 WORKDIR /app
 
 # Copy and restore dependencies
-COPY *.csproj ./
+COPY Youtube_Video_Downloader_Backend.csproj ./
 RUN dotnet restore
 
 # Copy the remaining source code
