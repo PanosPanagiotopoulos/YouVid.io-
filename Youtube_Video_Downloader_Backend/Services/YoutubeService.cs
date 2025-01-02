@@ -97,6 +97,11 @@
 
                 return response;
             }
+            catch (YoutubeExplode.Exceptions.VideoUnplayableException vue)
+            {
+                Log.Error(vue, $"Video '{vue.Data}' is unplayable. Reason: '{vue.Message}'.");
+                throw new InvalidOperationException($"Failed to download video: Video '{vue.Data}' is unplayable. Reason: '{vue.Message}'.", vue);
+            }
             catch (Xabe.FFmpeg.Exceptions.ConversionException ffmpegEx)
             {
                 throw new InvalidOperationException($"FFmpeg failed to process the video: {ffmpegEx.Message}", ffmpegEx);
