@@ -1,7 +1,8 @@
 services:
   backend:
     build:
-      context: ./Youtube_Video_Downloader_Backend
+      context: ./Youtube_Video_Downloader_Backend # Ensure this points to the correct folder
+      dockerfile: Dockerfile # Ensure this points to the correct Dockerfile
     ports:
       - "7076:7076"
       - "7077:7077"
