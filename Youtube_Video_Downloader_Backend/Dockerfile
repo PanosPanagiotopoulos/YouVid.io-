@@ -18,9 +18,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg wget \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
+
+COPY . .
 COPY ["Youtube_Video_Downloader_Backend.csproj", "."]
 RUN dotnet restore "./Youtube_Video_Downloader_Backend.csproj"
-COPY . .
 WORKDIR "/src/."
 RUN dotnet build "./Youtube_Video_Downloader_Backend.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
