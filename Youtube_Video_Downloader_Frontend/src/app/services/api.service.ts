@@ -1,25 +1,28 @@
-import { HttpHeaders } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import axios, { AxiosInstance } from "axios";
+import { HttpClient, HttpHeaders } from "@angular/common/http";
 
 @Injectable({
   providedIn: "root",
 })
 export class ApiService {
-  axiosInstance: AxiosInstance;
-  backedUrl: string = "";
-  constructor() {
-    const backendUrl =
-      window.location.hostname === "localhost"
-        ? "http://localhost:7076/api" // Local development environment
-        : "http://backend-api:7076/api"; // Docker environment
+  readonly backendUrl: string;
 
-    this.backedUrl = backendUrl;
-    this.axiosInstance = axios.create({
-      baseURL: backendUrl,
-      headers: {
-        "Content-Type": "application/json",
-      },
+  constructor(private http: HttpClient) {
+    this.backendUrl = this.getBackendUrl();
+  }
+
+  private getBackendUrl(): string {
+    const hostname = window.location.hostname;
+    if (hostname === "localhost") {
+      return "https://localhost:7077/api";
+    }
+    return "https://backend-api:7077/api";
+  }
+
+  getHeaders(): HttpHeaders {
+    return new HttpHeaders({
+      Accept: "video/mp4,application/octet-stream",
+      "Content-Type": "application/json",
     });
   }
 }

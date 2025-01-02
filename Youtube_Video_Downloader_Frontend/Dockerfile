@@ -1,5 +1,5 @@
-# Use Node.js 20 for building the Angular application
-FROM node:20 AS build
+# Stage 1: Build Angular application
+FROM node:20 AS builder
 WORKDIR /app
 
 # Install dependencies
@@ -13,10 +13,19 @@ RUN npm run build --prod
 # Debugging: List build output to verify
 RUN ls -R /app/dist
 
-# Use Nginx to serve the Angular application
+# Stage 2: Serve with Nginx
 FROM nginx:alpine
-COPY nginx.conf /etc/nginx/conf.d/default.conf  
-COPY --from=build /app/dist/demo/browser /usr/share/nginx/html
+WORKDIR /usr/share/nginx/html
 
-# Expose port for the Angular app
-EXPOSE 5000
+# Copy SSL certificates
+COPY certs /etc/nginx/certs
+
+# Copy Nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Copy the build output from the builder stage
+COPY --from=builder /app/dist/demo/browser ./
+
+# Expose ports for HTTP and HTTPS
+EXPOSE 443       
+EXPOSE 5001      

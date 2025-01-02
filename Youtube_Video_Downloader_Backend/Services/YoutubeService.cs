@@ -9,7 +9,7 @@ namespace YouVid.io___Youtube_Video_Downloader.Services
     public class YoutubeService
     {
         private readonly YoutubeClient _youtubeClient;
-
+        string tempDir = Path.GetTempPath();
         public YoutubeService()
         {
             _youtubeClient = new YoutubeClient();
@@ -51,6 +51,7 @@ namespace YouVid.io___Youtube_Video_Downloader.Services
 
                 // If no muxed stream, fallback to separate video and audio streams
                 IVideoStreamInfo? bestVideoStream = streamManifest.Result.GetVideoStreams()
+                    .Where(s => s.VideoQuality.MaxHeight <= 1440) // Filter streams to a maximum of 2K (1440p)
                     .OrderByDescending(s => s.VideoQuality.MaxHeight)
                     .ThenBy(s => s.Size)
                     .FirstOrDefault();
@@ -82,7 +83,7 @@ namespace YouVid.io___Youtube_Video_Downloader.Services
                     case ProcessSettings.Normal:
                         break;
                     case ProcessSettings.High:
-                        string toEnhanceVideoFile = Path.GetTempFileName() + ".mp4";
+                        string toEnhanceVideoFile = Path.Combine(tempDir, Path.GetTempFileName() + ".mp4");
                         response.VideoStream.Position = 0;
                         await WriteStreamToFileAsync(response.VideoStream, toEnhanceVideoFile, cancellationToken);
                         await EnhanceHigh(toEnhanceVideoFile, response.VideoStream, cancellationToken);
@@ -129,10 +130,9 @@ namespace YouVid.io___Youtube_Video_Downloader.Services
         }
         private async Task CombineVideoAndAudio(Stream videoStream, Stream audioStream, Stream outputStream, CancellationToken cancellationToken)
         {
-            string tempVideoFile = Path.GetTempFileName() + ".mp4";
-            string tempAudioFile = Path.GetTempFileName() + ".aac";
-            string outputFile = Path.GetTempFileName() + ".mp4";
-            string compressedFile = Path.GetTempFileName() + "_compressed.mp4";
+            string tempVideoFile = Path.Combine(tempDir, Path.GetTempFileName() + ".mp4");
+            string tempAudioFile = Path.Combine(tempDir, Path.GetTempFileName() + ".aac");
+            string outputFile = Path.Combine(tempDir, Path.GetTempFileName() + ".mp4");
 
             try
             {
@@ -168,21 +168,29 @@ namespace YouVid.io___Youtube_Video_Downloader.Services
 
         private async Task EnhanceHigh(string inputFile, Stream toWriteStream, CancellationToken cancellationToken)
         {
-            string outputFile = Path.GetTempFileName() + ".mp4";
+            string outputFile = Path.Combine(tempDir, Path.GetTempFileName() + ".mp4");
             try
             {
                 Log.Information($"Enhancing video to high...");
 
                 // Enhance quality and optimize for speed without hindering quality
                 Xabe.FFmpeg.IConversion ffmpeg = Xabe.FFmpeg.FFmpeg.Conversions.New()
-                .AddParameter($"-i \"{inputFile}\"") // Video input
-                .AddParameter("-vcodec libx264") // Use libx264 codec for video
-                .AddParameter("-crf 28") // Set Constant Rate Factor to 28
-                .AddParameter("-preset ultrafast") // Set preset to ultrafast
-                .AddParameter("-vf scale=-1:1080") // Scale video to 1080p
-                .AddParameter("-tune film") // Tune for film
-                .AddParameter($"-f mp4")
-                .AddParameter($"\"{outputFile}\""); // Output file
+                  .AddParameter($"-i \"{inputFile}\"") // Video input
+                  .AddParameter("-vcodec libx264") // Use libx264 codec for video
+                  .AddParameter("-preset fast") // Use fast preset for NVENC
+                  .AddParameter("-b:v 4M") // Set bitrate for reasonable quality-speed balance
+                  .AddParameter("-crf 28") // Slightly increase CRF for faster encoding
+                  .AddParameter("-preset ultrafast") // Use a faster preset for reduced latency
+                  .AddParameter("-tune zerolatency") // Optimize for low latency
+                  .AddParameter("-threads 0") // Use all available threads
+                  .AddParameter("-bf 2") // Limit B-frames to 2 for faster encoding
+                  .AddParameter("-g 48") // Set GOP size
+                  .AddParameter("-level 4.1") // Ensure compatibility
+                  .AddParameter($"-f mp4") // Output format
+                  .AddParameter($"\"{outputFile}\""); // Output file
+
+
+
 
                 await ffmpeg.Start(cancellationToken);
 

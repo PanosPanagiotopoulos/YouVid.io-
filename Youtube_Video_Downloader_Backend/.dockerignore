@@ -28,3 +28,16 @@ README.md
 !.git/config
 !.git/packed-refs
 !.git/refs/heads/**
+# Common files to ignore
+**/.git
+**/.gitignore
+**/.gitmodules
+**/.svn
+**/.hg
+**/.idea
+**/.vscode
+**/.DS_Store
+**/Thumbs.db
+**/*.log
+**/node_modules
+**/dist

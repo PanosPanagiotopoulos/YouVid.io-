@@ -28,6 +28,7 @@
     "@angular-devkit/build-angular": "^18.1.0",
     "@angular/cli": "^18.1.0",
     "@angular/compiler-cli": "^18.1.0",
+    "@types/axios": "^0.9.36",
     "@types/file-saver": "^2.0.7",
     "@types/three": "^0.160.0",
     "typescript": "~5.5.0"

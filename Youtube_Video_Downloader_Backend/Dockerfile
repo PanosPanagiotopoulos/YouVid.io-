@@ -1,5 +1,11 @@
-# Use the official .NET image for building the application
+# Use the official .NET SDK image for building the application
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+
+# Install ffmpeg and yt-dlp
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg wget \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
 WORKDIR /app
 
 # Copy and restore dependencies
@@ -12,18 +18,25 @@ COPY . ./
 # Build the application
 RUN dotnet publish -c Release -o out
 
-# Use the runtime image for the final build
+# Final stage: runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
+
+# Install ffmpeg for the runtime image
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
 WORKDIR /app
 
-# Install ffmpeg and yt-dlp
-RUN apt-get update && apt-get install -y ffmpeg wget
+# Copy the certificate for HTTPS
+COPY certificate.pfx /app/certificate.pfx
 
-# Copy the built application
-COPY --from=build /app/out .
+# Copy the built application from the build stage
+COPY --from=build /app/out ./
 
-# Expose the necessary port
+# Expose the necessary ports
 EXPOSE 7076
+EXPOSE 7077
 
 # Run the application
 ENTRYPOINT ["dotnet", "Youtube_Video_Downloader_Backend.dll"]
