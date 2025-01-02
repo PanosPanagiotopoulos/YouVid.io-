@@ -6,15 +6,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg wget \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
-WORKDIR /app
+WORKDIR /
 
 # Copy the .csproj file(s) and restore dependencies
-COPY *.csproj ./app
-COPY *.sln ./app    # Adjust this if your .csproj file is in a subfolder
-RUN dotnet restore  # Restore dependencies
-
+COPY *.csproj ./
+RUN dotnet restore  
 # Copy the remaining source code
-COPY . ./           # Copy the rest of your source files
+COPY . ./
 RUN dotnet publish -c Release -o out
 
 # Final stage: runtime image
