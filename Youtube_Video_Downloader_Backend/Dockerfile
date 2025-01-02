@@ -8,14 +8,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg wget \
 # Set working directory
 WORKDIR /app
 
-# Copy the .csproj file to the container (explicitly)
-COPY Youtube_Video_Downloader_Backend/*.csproj ./   # Adjust this path based on your actual folder structure
-
-# Restore dependencies (runs `dotnet restore` on the .csproj)
+# Copy and restore dependencies
+COPY *.csproj ./
 RUN dotnet restore
 
 # Copy the remaining source code
-COPY . .
+COPY . ./
 
 # Build the application
 RUN dotnet publish -c Release -o out
@@ -34,7 +32,7 @@ WORKDIR /app
 COPY certificate.pfx /app/certificate.pfx
 
 # Copy the built application from the build stage
-COPY --from=build /app/out .
+COPY --from=build /app/out ./
 
 # Expose the necessary ports
 EXPOSE 7076
