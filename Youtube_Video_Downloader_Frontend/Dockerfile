@@ -1,31 +1,40 @@
-# Stage 1: Build Angular application
-FROM node:20 AS builder
+# Use the official .NET SDK image for building the application
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+
+# Install ffmpeg and yt-dlp
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg wget \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
 WORKDIR /app
 
-# Install dependencies
-COPY package*.json ./
-RUN npm install --force
+# Copy the .csproj file(s) and restore dependencies
+COPY *.csproj ./    # Adjust this if your .csproj file is in a subfolder
+RUN dotnet restore  # Restore dependencies
 
-# Copy Angular source code and build
-COPY . ./
-RUN npm run build --prod
+# Copy the remaining source code
+COPY . ./           # Copy the rest of your source files
+RUN dotnet publish -c Release -o out
 
-# Debugging: List build output to verify
-RUN ls -R /app/dist
+# Final stage: runtime image
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
 
-# Stage 2: Serve with Nginx
-FROM nginx:alpine
-WORKDIR /usr/share/nginx/html
+# Install ffmpeg for the runtime image
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Copy SSL certificates
-COPY certs /etc/nginx/certs
+# Set working directory
+WORKDIR /app
 
-# Copy Nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy the certificate for HTTPS
+COPY certificate.pfx /app/certificate.pfx
 
-# Copy the build output from the builder stage
-COPY --from=builder /app/dist/demo/browser ./
+# Copy the built application from the build stage
+COPY --from=build /app/out ./
 
-# Expose ports for HTTP and HTTPS
-EXPOSE 443       
-EXPOSE 5001      
+# Expose the necessary ports
+EXPOSE 7076
+EXPOSE 7077
+
+# Run the application
+ENTRYPOINT ["dotnet", "Youtube_Video_Downloader_Backend.dll"]
