@@ -56,15 +56,16 @@ namespace YouVid.io___Youtube_Video_Downloader.Controllers
 
                 Log.Information($"Serving video: {result.VideoTitle}");
 
+                string sanitizedVideoTitle = string.Concat(result.VideoTitle.Where(c => c <= 127 && c != '"' && c != '\\'));
                 // Set the Content-Disposition header to indicate the file name in the browser
                 Response.Headers.Append("Accept-Ranges", "bytes");
                 Response.Headers.Append("Cache-Control", "no-store");
                 if (!Response.Headers.ContainsKey("Content-Disposition"))
                 {
-                    Response.Headers.Append("Content-Disposition", $"attachment; filename=\"{result.VideoTitle}\"");
+                    Response.Headers.Append("Content-Disposition", $"attachment; filename=\"{sanitizedVideoTitle}\"");
                 }
 
-                else Response.Headers["Content-Disposition"] = $"attachment; filename=\"{result.VideoTitle}\"";
+                else Response.Headers["Content-Disposition"] = $"attachment; filename=\"{sanitizedVideoTitle}\"";
 
 
                 // Ensure the stream is at the beginning
@@ -82,7 +83,8 @@ namespace YouVid.io___Youtube_Video_Downloader.Controllers
             {
                 Log.Error(ioex, $"An IO error occurred while downloading the video: {ioex.Message}");
                 // Do not return BadRequest for IO exceptions, just log the error
-                return StatusCode(500, "An error occurred while processing the video.");
+                ModelState.AddModelError("error", "An error occurred while processing the video.");
+                return BadRequest(ModelState);
             }
             catch (Exception ex)
             {

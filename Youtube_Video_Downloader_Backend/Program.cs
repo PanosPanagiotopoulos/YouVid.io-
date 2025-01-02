@@ -96,8 +96,8 @@ app.Use(async (context, next) =>
     // Update security headers
     context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
     context.Response.Headers.Append("Content-Security-Policy",
-    "frame-src http://localhost:5000 https://localhost:5001 http://localhost:7076;");
-    context.Response.Headers.Append("X-Frame-Options", "ALLOW-FROM http://localhost:5000");
+    "frame-src http://localhost:5000 https://localhost:5001 http://localhost:7076 http://localhost:7077 https://localhost:7077;");
+    context.Response.Headers.Append("X-Frame-Options", "ALLOW-FROM http://localhost:5000 https://localhost:5001 http://localhost:7076 http://localhost:7077 https://localhost:7077");
     await next();
 });
 

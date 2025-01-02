@@ -24,7 +24,7 @@ export class IframeDownloadService {
       iframe.onload = () => {
         setTimeout(() => {
           this.downloadEvents.next({ type: "complete", id: iframeId });
-        }, 13000);
+        }, 45000);
         resolve();
         this.cleanupIframe(iframeId);
       };
@@ -38,7 +38,7 @@ export class IframeDownloadService {
 
       document.body.appendChild(iframe);
       this.downloadEvents.next({ type: "start", id: iframeId });
-      iframe.src = downloadUrl;*/
+      iframe.src = downloadUrl; */
 
       const downloadId: string = `download-link-${Date.now()} ${
         Math.random() * 10
