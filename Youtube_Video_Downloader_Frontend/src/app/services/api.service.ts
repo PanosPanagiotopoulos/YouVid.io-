@@ -14,9 +14,9 @@ export class ApiService {
   private getBackendUrl(): string {
     const hostname = window.location.hostname;
     if (hostname === "localhost") {
-      return "https://localhost:7077/api";
+      return "/api";
     }
-    return "https://backend-api:7077/api";
+    return "/api";
   }
 
   getHeaders(): HttpHeaders {

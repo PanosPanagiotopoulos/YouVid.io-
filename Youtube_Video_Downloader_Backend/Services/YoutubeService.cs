@@ -1,13 +1,14 @@
-﻿using Serilog;
-using YoutubeExplode;
-using YoutubeExplode.Videos;
-using YoutubeExplode.Videos.Streams;
-using YouVid.io___Youtube_Video_Downloader.Models;
-
-namespace YouVid.io___Youtube_Video_Downloader.Services
+﻿namespace YouVid.io___Youtube_Video_Downloader.Services
 {
+    using Serilog;
+    using YoutubeExplode;
+    using YoutubeExplode.Videos;
+    using YoutubeExplode.Videos.Streams;
+    using YouVid.io___Youtube_Video_Downloader.Models;
+
     public class YoutubeService
     {
+
         private readonly YoutubeClient _youtubeClient;
         string tempDir = Path.GetTempPath();
         public YoutubeService()
