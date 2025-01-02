@@ -9,8 +9,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg wget \
 WORKDIR /app
 
 # Copy the .csproj file(s) and restore dependencies
-COPY *.csproj ./
-COPY *.sln ./    # Adjust this if your .csproj file is in a subfolder
+COPY *.csproj ./app
+COPY *.sln ./app    # Adjust this if your .csproj file is in a subfolder
 RUN dotnet restore  # Restore dependencies
 
 # Copy the remaining source code
