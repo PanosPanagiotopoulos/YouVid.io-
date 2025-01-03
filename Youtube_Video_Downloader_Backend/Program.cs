@@ -51,9 +51,6 @@ builder.Services.AddSwaggerGen();
 // Services
 builder.Services.AddScoped<YoutubeService>();
 
-builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
-
-
 WebApplication app = builder.Build();
 
 // Configure the HTTP request pipeline.
