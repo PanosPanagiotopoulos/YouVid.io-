@@ -48,7 +48,7 @@
 
                 VideoResponse response = new VideoResponse()
                 {
-                    VideoTitle = videoMetadata.Result.Title + ".mp4",
+                    VideoTitle = videoMetadata.Result.Title.Replace(".mp4", ""),
                 };
                 if (bestMuxedStream != null)
                 {
@@ -89,10 +89,12 @@
                 switch (settings.Settings)
                 {
                     case ProcessSettings.Normal:
+                        response.VideoTitle = response.VideoTitle.Replace(".mp4", "") + "_normal.mp4";
                         break;
                     case ProcessSettings.High:
                         string toEnhanceVideoFile = Path.Combine(tempDir, Path.GetTempFileName() + ".mp4");
                         response.VideoStream.Position = 0;
+                        response.VideoTitle = response.VideoTitle.Replace(".mp4", "") + "_high.mp4";
                         await WriteStreamToFileAsync(response.VideoStream, toEnhanceVideoFile, cancellationToken);
                         await EnhanceHigh(toEnhanceVideoFile, response.VideoStream, cancellationToken);
                         break;
@@ -201,8 +203,6 @@
                   .AddParameter("-level 4.1") // Ensure compatibility
                   .AddParameter($"-f mp4") // Output format
                   .AddParameter($"\"{outputFile}\""); // Output file
-
-
 
 
                 await ffmpeg.Start(cancellationToken);

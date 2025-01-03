@@ -1,0 +1,36 @@
+# Git directories and files
+.git/
+.gitignore
+
+# Node.js dependencies
+/Youtube_Video_Downloader_Frontend/node_modules/
+Youtube_Video_Downloader_Frontend/package-lock.json
+
+# Angular build outputs
+/Youtube_Video_Downloader_Frontend/dist/
+/Youtube_Video_Downloader_Frontend/build/
+
+# .NET dependencies and build outputs
+/Youtube_Video_Downloader_Backend/bin/
+[Youtube_Video_Downloader_Backend/obj/
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Visual Studio Code directories
+.vscode/
+
+# Docker-related files
+Dockerfile
+docker-compose.yml
+
+# Secrets and certificates
+/Youtube_Video_Downloader_Backend/cookies.json
+/Youtube_Video_Downloader_Backend/certificate.pfx
+
+# Logs and temporary files
+*.log
+*.tmp
