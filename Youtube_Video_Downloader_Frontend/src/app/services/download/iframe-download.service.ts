@@ -39,6 +39,8 @@ export class IframeDownloadService {
    */
   triggerDownload(downloadUrl: string): Promise<void> {
     return new Promise((resolve, reject) => {
+      const timeout: number = 1000 * 60 * 15; // 15 minutes
+
       const downloadId: string = `download-iframe-${Date.now()}-${
         Math.random() * 10
       }`;
@@ -51,9 +53,12 @@ export class IframeDownloadService {
         // Delay to ensure download starts
         setTimeout(() => {
           this.downloadEvents.next({ type: "complete", id: downloadId });
+        }, 35000); // 5 seconds delay
+
+        setTimeout(() => {
           resolve();
           this.cleanupIframe(downloadId);
-        }, 35000); // 5 seconds delay
+        }, timeout);
       };
 
       // Event listener for errors
