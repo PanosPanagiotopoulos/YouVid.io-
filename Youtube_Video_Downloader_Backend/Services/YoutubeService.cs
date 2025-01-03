@@ -190,12 +190,11 @@
 
                 Xabe.FFmpeg.IConversion ffmpeg = Xabe.FFmpeg.FFmpeg.Conversions.New()
                 .AddParameter($"-i \"{inputFile}\"") // Video input
-                .AddParameter("-vcodec libx264") // Use libx264 codec for video
+                .AddParameter("-strict experimental") // Allow experimental codecs
                 .AddParameter("-preset ultrafast") // Use the fastest preset for encoding speed
                 .AddParameter("-crf 35") // Increase CRF for faster encoding and smaller files (lower quality)
                 .AddParameter("-b:v 2M") // Lower bitrate for reduced processing overhead
                 .AddParameter("-tune zerolatency") // Optimize for low latency
-                .AddParameter("-threads 2") // Restrict threads to avoid overloading CPU
                 .AddParameter("-bf 1") // Reduce B-frames to 1 for faster encoding
                 .AddParameter("-g 60") // Increase GOP size to reduce processing overhead
                 .AddParameter("-pix_fmt yuv420p") // Ensure compatibility with older devices
