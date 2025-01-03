@@ -34,8 +34,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY Youtube_Video_Downloader_Backend/cookies.json /app/cookies.json
-# Copy HTTPS certificate for secure communication
-COPY Youtube_Video_Downloader_Backend/certificate.pfx /app/certificate.pfx
 
 # Copy the published .NET backend from the builder stage
 COPY --from=backend-builder /app/publish ./
