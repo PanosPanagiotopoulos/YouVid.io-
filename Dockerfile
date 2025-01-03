@@ -44,6 +44,7 @@ COPY --from=frontend-builder /app/dist/demo/browser ./wwwroot
 # Expose ports for HTTP and HTTPS
 EXPOSE 443
 EXPOSE 7077
+EXPOSE 8080
 
 # Run the application
 ENTRYPOINT ["dotnet", "Youtube_Video_Downloader_Backend.dll"]

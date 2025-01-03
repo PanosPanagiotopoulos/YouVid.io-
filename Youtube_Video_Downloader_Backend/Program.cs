@@ -31,9 +31,14 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowApiRequests", policy =>
     {
-        policy.WithOrigins($"http://localhost:{port}", $"https://localhost:{port}")
-              .AllowAnyMethod()
-              .AllowAnyHeader();
+        policy.WithOrigins(
+                $"http://localhost:{port}",
+                $"https://localhost:{port}",
+                "https://youvidio-production.up.railway.app",
+                $"https://youvidio-production.up.railway.app:{port}"
+            )
+            .AllowAnyMethod()
+            .AllowAnyHeader();
     });
 });
 
@@ -93,8 +98,12 @@ app.Use(async (context, next) =>
     // Update security headers
     context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
     context.Response.Headers.Append("Content-Security-Policy",
-    "frame-src http://localhost:5000 https://localhost:5001 http://localhost:7076 http://localhost:7077 https://localhost:7077;");
-    context.Response.Headers.Append("X-Frame-Options", "ALLOW-FROM http://localhost:5000 https://localhost:5001 http://localhost:7076 http://localhost:7077 https://localhost:7077");
+    $"frame-ancestors https://youvidio-production.up.railway.app https://youvidio-production.up.railway.app:{port} http://localhost:{port} https://localhost:{port};");
+    // Remove or update X-Frame-Options
+    context.Response.Headers.Remove("X-Frame-Options");
+
+    // Optionally set to SAMEORIGIN if needed
+    context.Response.Headers.Append("X-Frame-Options", "SAMEORIGIN");
     await next();
 });
 
