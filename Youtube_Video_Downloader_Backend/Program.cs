@@ -16,24 +16,26 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 // - Logger //
 
+string port = "7077"; // Default to 7076 if PORT is not set
 builder.Services.Configure<KestrelServerOptions>(options =>
 {
     options.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(8);
     options.Limits.RequestHeadersTimeout = TimeSpan.FromMinutes(8);
 
-    options.ListenAnyIP(7076); // HTTP
-    options.ListenAnyIP(7077, listenOptions =>
+    options.ListenAnyIP(int.Parse(port), listenOptions =>
     {
+
         listenOptions.UseHttps("certificate.pfx", "panospan7");
     });
 });
+
 
 // Configure CORS to allow requests from the API itself
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowApiRequests", policy =>
     {
-        policy.WithOrigins("http://localhost:7076", "https://localhost:7077")
+        policy.WithOrigins($"http://localhost:{port}", $"https://localhost:{port}")
               .AllowAnyMethod()
               .AllowAnyHeader();
     });
@@ -53,7 +55,8 @@ builder.Services.AddSwaggerGen();
 // Services
 builder.Services.AddScoped<YoutubeService>();
 
-builder.WebHost.UseUrls("http://0.0.0.0:7076", "https://0.0.0.0:7077");
+builder.WebHost.UseUrls($"https://0.0.0.0:{port}");
+
 
 WebApplication app = builder.Build();
 
@@ -63,6 +66,17 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.Use(async (context, next) =>
+{
+    if (!context.Request.IsHttps)
+    {
+        string httpsUrl = $"https://{context.Request.Host}{context.Request.Path}{context.Request.QueryString}";
+        context.Response.Redirect(httpsUrl, permanent: true);
+        return;
+    }
+    await next();
+});
 
 // Serve static files from wwwroot
 app.UseStaticFiles();

@@ -44,7 +44,7 @@ COPY --from=backend-builder /app/publish ./
 COPY --from=frontend-builder /app/dist/demo/browser ./wwwroot
 
 # Expose ports for HTTP and HTTPS
-EXPOSE 7076
+EXPOSE 443
 EXPOSE 7077
 
 # Run the application
