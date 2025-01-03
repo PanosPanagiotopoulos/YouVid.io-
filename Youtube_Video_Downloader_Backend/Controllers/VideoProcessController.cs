@@ -71,7 +71,7 @@ namespace YouVid.io___Youtube_Video_Downloader.Controllers
                 // Ensure the stream is at the beginning
                 result.VideoStream.Seek(0, SeekOrigin.Begin);
 
-                return File(result.VideoStream, result.MimeType!, enableRangeProcessing: true);
+                return File(result.VideoStream, result.MimeType!, enableRangeProcessing: false);
             }
             catch (InvalidOperationException ioe)
             {
