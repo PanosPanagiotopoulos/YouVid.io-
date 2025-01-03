@@ -19,8 +19,8 @@ builder.Host.UseSerilog();
 string port = "8080"; // Default to 7076 if PORT is not set
 builder.Services.Configure<KestrelServerOptions>(options =>
 {
-    options.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(8);
-    options.Limits.RequestHeadersTimeout = TimeSpan.FromMinutes(8);
+    options.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(15);
+    options.Limits.RequestHeadersTimeout = TimeSpan.FromMinutes(15);
 
     options.ListenAnyIP(int.Parse(port));
 });
