@@ -50,7 +50,7 @@ export class IframeDownloadService {
 
       // Extract delay setting from URL
       const url = new URL(downloadUrl, window.location.origin);
-      const delaySetting = url.searchParams.get("delaySetting");
+      const delaySetting = url.searchParams.get("settings");
       const completeDelay = delaySetting === "1" ? 35000 : 90000; // 35 sec or 1.5 min
 
       // Event listener for successful load
