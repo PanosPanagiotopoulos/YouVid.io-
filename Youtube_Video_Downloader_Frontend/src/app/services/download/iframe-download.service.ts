@@ -48,12 +48,17 @@ export class IframeDownloadService {
       iframe.style.display = "none";
       iframe.id = downloadId;
 
+      // Extract delay setting from URL
+      const url = new URL(downloadUrl, window.location.origin);
+      const delaySetting = url.searchParams.get("delaySetting");
+      const completeDelay = delaySetting === "1" ? 35000 : 90000; // 35 sec or 1.5 min
+
       // Event listener for successful load
       iframe.onload = () => {
         // Delay to ensure download starts
         setTimeout(() => {
           this.downloadEvents.next({ type: "complete", id: downloadId });
-        }, 35000); // 5 seconds delay
+        }, completeDelay); // 5 seconds delay
 
         setTimeout(() => {
           resolve();

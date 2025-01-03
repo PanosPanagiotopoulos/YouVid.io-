@@ -21,8 +21,6 @@ builder.Services.Configure<KestrelServerOptions>(options =>
 {
     options.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(15);
     options.Limits.RequestHeadersTimeout = TimeSpan.FromMinutes(15);
-
-    options.ListenAnyIP(int.Parse(port));
 });
 
 
