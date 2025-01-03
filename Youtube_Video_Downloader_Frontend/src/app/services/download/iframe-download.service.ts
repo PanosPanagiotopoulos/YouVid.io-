@@ -1,5 +1,5 @@
 import { Injectable } from "@angular/core";
-import { Observable, Subject } from "rxjs";
+import { delay, Observable, Subject } from "rxjs";
 
 export interface IframeDownloadEvent {
   type: "start" | "complete" | "error";
@@ -51,6 +51,7 @@ export class IframeDownloadService {
       // Extract delay setting from URL
       const url = new URL(downloadUrl, window.location.origin);
       const delaySetting = url.searchParams.get("settings");
+      console.log(delaySetting);
       const completeDelay = delaySetting === "1" ? 35000 : 90000; // 35 sec or 1.5 min
 
       // Event listener for successful load
@@ -58,12 +59,11 @@ export class IframeDownloadService {
         // Delay to ensure download starts
         setTimeout(() => {
           this.downloadEvents.next({ type: "complete", id: downloadId });
-        }, completeDelay); // 5 seconds delay
-
-        setTimeout(() => {
-          resolve();
-          this.cleanupIframe(downloadId);
-        }, timeout);
+          setTimeout(() => {
+            resolve();
+            this.cleanupIframe(downloadId);
+          }, timeout);
+        }, completeDelay);
       };
 
       // Event listener for errors
