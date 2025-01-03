@@ -3,16 +3,11 @@
 .gitignore
 
 # Node.js dependencies
-/Youtube_Video_Downloader_Frontend/node_modules/
 Youtube_Video_Downloader_Frontend/package-lock.json
 
-# Angular build outputs
-/Youtube_Video_Downloader_Frontend/dist/
-/Youtube_Video_Downloader_Frontend/build/
-
 # .NET dependencies and build outputs
-/Youtube_Video_Downloader_Backend/bin/
-[Youtube_Video_Downloader_Backend/obj/
+Youtube_Video_Downloader_Backend/bin/
+Youtube_Video_Downloader_Backend/obj/
 
 # User-specific files
 *.suo
@@ -27,10 +22,14 @@ Youtube_Video_Downloader_Frontend/package-lock.json
 Dockerfile
 docker-compose.yml
 
-# Secrets and certificates
-/Youtube_Video_Downloader_Backend/cookies.json
-/Youtube_Video_Downloader_Backend/certificate.pfx
-
 # Logs and temporary files
 *.log
 *.tmp
+
+# Temporary and system files
+*.DS_Store
+Thumbs.db
+
+# IDE-specific files
+.idea/
+*.iml
