@@ -1,39 +1,31 @@
 using AspNetCoreRateLimit;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Logging;
 using Serilog;
-using Youtube_Video_Downloader_Backend.Services; // Use the correct namespace for VideoCache
-using YouVid.io___Youtube_Video_Downloader.Services;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Linq;
 using Youtube_Video_Downloader_Backend.Models; // Assuming DownloadQueueItem is in this namespace
-using System.Text.Json;
-using System.IO;
+using Youtube_Video_Downloader_Backend.Services;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+
+string port = builder.Configuration["PORT"] ?? "8080";
+builder.Services.Configure<KestrelServerOptions>(options =>
+{
+    options.ListenAnyIP(int.Parse(port)); // Listen on the specified port
+});
 
 // Logger //
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration) // Load configuration from appsettings.json
-    .Enrich.FromLogContext() // Enrich logs with contextual information
     .CreateLogger();
 
-// Use Serilog middleware to log using ILogger
-builder.Host.UseSerilog();
-// - Logger //
-
-string port = "8080"; // Default to 7076 if PORT is not set
-builder.Services.Configure<KestrelServerOptions>(options =>
-{
-    options.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(15);
-    options.Limits.RequestHeadersTimeout = TimeSpan.FromMinutes(15);
-});
-
-
-// Configure CORS to allow requests from the API itself
+// Configure CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowApiRequests", policy =>
@@ -49,9 +41,6 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Video Chunks Cache with Eviction
-builder.Services.AddSingleton<VideoCache>();
-builder.Services.AddHostedService<CacheEvictionService>(); // Background service for eviction
 builder.Services.AddSingleton<DownloadQueue>();
 builder.Services.AddHostedService<DownloadProcessorService>(); // Background service for download queue
 
@@ -66,24 +55,16 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Add Serilog middleware to log using ILogger
+builder.Host.UseSerilog();
 // Services
 builder.Services.AddScoped<YoutubeService>();
+builder.Services.AddSingleton<VideoCache>();
 
 WebApplication app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-
-// Serve static files from wwwroot
 app.UseStaticFiles();
-
-// Serve Static Files from Angular Dist Folder
-//var frontendPath = Path.Combine(Directory.GetParent(Directory.GetCurrentDirectory())?.FullName ?? string.Empty, "Youtube_Video_Downloader_Frontend", "dist", "demo", "browser");
 var frontendPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
 
 app.UseStaticFiles(new StaticFileOptions
@@ -92,16 +73,12 @@ app.UseStaticFiles(new StaticFileOptions
     RequestPath = ""
 });
 
-// Enable Middleware for Rate Limiting
 app.UseIpRateLimiting();
 
 app.UseHttpsRedirection();
-
-app.UseRouting();
-
+app.UseRouting(); // Place UseRouting here
 // Preflight Requests and Security Headers
-app.Use(async (context, next) =>
-{
+app.Use(async (context, next) => {
     if (context.Request.Method == HttpMethods.Options)
     {
         context.Response.StatusCode = StatusCodes.Status204NoContent;
@@ -112,13 +89,11 @@ app.Use(async (context, next) =>
     context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
     context.Response.Headers.Append("Content-Security-Policy",
     $"frame-ancestors https://youvidio-production.up.railway.app https://youvidio-production.up.railway.app:{port} http://localhost:{port} https://localhost:{port};");
-    // Remove or update X-Frame-Options
     context.Response.Headers.Remove("X-Frame-Options");
 
-    // Optionally set to SAMEORIGIN if needed
     context.Response.Headers.Append("X-Frame-Options", "SAMEORIGIN");
-    await next();
 });
+app.UseAuthentication(); // Add Authentication middleware here if needed
 
 // Apply CORS Policy
 app.UseCors("AllowApiRequests");
@@ -149,7 +124,7 @@ public class DownloadQueueItem
 public class DownloadQueue
 {
     private readonly List<DownloadQueueItem> _queue = new List<DownloadQueueItem>();
-    private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(0, 1); // To signal the background service
+    private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(0); // To signal the background service
     private readonly ILogger<DownloadQueue> _logger;
     private const string QueueFileName = "downloadQueue.json";
 
@@ -251,65 +226,11 @@ public class DownloadQueue
                     {
                         item.Status = "pending";
                     }
-                     // Signal the semaphore for each pending item to start processing
-                    int pendingCount = _queue.Count(item => item.Status == "pending");
-                    if (pendingCount > 0)
-                    {
-                         _semaphore.Release(pendingCount);
-                    }
-                }
-                 _logger.LogInformation($"Loaded {loadedQueue.Count} items from queue file.");
+                } // Signal the semaphore for each pending item to start processing
+                 // Signal the semaphore for each pending item to start processing
+                int pendingCount = _queue.Count(item => item.Status == "pending");
+                _semaphore.Release(pendingCount);
             }
         }
-    }
-}
-
-public class DownloadProcessorService : BackgroundService
-{
-    private readonly DownloadQueue _downloadQueue;
-    private readonly IServiceScopeFactory _serviceScopeFactory;
-    private readonly ILogger<DownloadProcessorService> _logger;
-
-    public DownloadProcessorService(DownloadQueue downloadQueue, IServiceScopeFactory serviceScopeFactory, ILogger<DownloadProcessorService> logger)
-    {
-        _downloadQueue = downloadQueue;
-        _serviceScopeFactory = serviceScopeFactory;
-        _logger = logger;
-    }
-
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        _logger.LogInformation("Download Processor Service started.");
-        while (!stoppingToken.IsCancellationRequested)
-        {
-            var nextItem = await _downloadQueue.DequeueAsync(stoppingToken);
-            if (nextItem != null)
-            {
-                _logger.LogInformation($"Processing download for video: {nextItem.VideoId}");
-                _downloadQueue.UpdateVideoStatus(nextItem.Id, "downloading");
-                try
-                {
-                    using (var scope = _serviceScopeFactory.CreateScope())
-                    {
-                         var youtubeService = scope.ServiceProvider.GetRequiredService<YoutubeService>();
-                         // Implement the actual download logic here
-                         // This will likely involve calling the YoutubeService to download the video
-                         // and saving it to a temporary location or streaming it.
-                         // For now, let's simulate a download.
-                         await Task.Delay(5000, stoppingToken); // Simulate download time
-
-                         // Assuming download is successful
-                         _downloadQueue.UpdateVideoStatus(nextItem.Id, "finished");
-                         _logger.LogInformation($"Finished downloading video: {nextItem.VideoId}");
-                    }
-                }
-                catch (Exception ex)
-                {
-                     _logger.LogError(ex, $"Error downloading video {nextItem.VideoId}");
-                     _downloadQueue.UpdateVideoStatus(nextItem.Id, "error", ex.Message);
-                }
-            }
-        }
-         _logger.LogInformation("Download Processor Service stopped.");
     }
 }

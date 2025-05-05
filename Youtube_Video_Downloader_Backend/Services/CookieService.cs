@@ -1,4 +1,74 @@
-﻿using Newtonsoft.Json;
+namespace Youtube_Video_Downloader_Backend.Services
+{
+    using System.Net;
+    using System.Text.Json;
+    public class CookieService
+    {
+        private readonly string _cookieFilePath;
+        public CookieService(string cookieFilePath)
+        {
+            _cookieFilePath = cookieFilePath;
+        }
+        public HttpClient GetHttpClientWithCookies()
+        {
+            HttpClientHandler handler = new HttpClientHandler();
+            handler.CookieContainer = LoadCookies();
+
+            return new HttpClient(handler);
+        }
+        public CookieContainer LoadCookies()
+        {
+            if (!File.Exists(_cookieFilePath))
+            {
+                Console.WriteLine($"Cookie file not found at '{_cookieFilePath}'. Creating a new file.");
+                File.Create(_cookieFilePath).Close();
+            }
+            var cookieContainer = new CookieContainer();
+            try
+            {
+                using (FileStream stream = File.OpenRead(_cookieFilePath))
+                {
+                    if (stream.Length == 0)
+                    {
+                        Console.WriteLine("Cookie file is empty.");
+                        return cookieContainer;
+                    }
+                    var json = JsonSerializer.Deserialize<List<CookieData>>(stream);
+                    if (json == null)
+                    {
+                        Console.WriteLine("Cookie file is empty.");
+                        return cookieContainer;
+                    }
+                    foreach (var cookieData in json)
+                    {
+                        var cookie = new Cookie(cookieData.Name, cookieData.Value, cookieData.Path, cookieData.Domain);
+                        cookieContainer.Add(cookie);
+                    }
+                }
+            }
+            catch (JsonException ex)
+            {
+                Console.WriteLine($"Failed to load cookies from JSON: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred while loading cookies: {ex.Message}");
+            }
+            return cookieContainer;
+        }
+    }
+    public class CookieData
+    {
+        public CookieData(string name, string value, string path, string domain)
+        {
+            Name = name;
+            Value = value;
+            Path = path;
+            Domain = domain;
+        }
+    }
+}
+using Newtonsoft.Json;
 using System.Net;
 
 public class CookieService

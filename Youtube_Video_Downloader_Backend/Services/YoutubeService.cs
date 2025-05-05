@@ -1,11 +1,10 @@
-﻿namespace YouVid.io___Youtube_Video_Downloader.Services
+namespace YouVid.io___Youtube_Video_Downloader.Services
 {
     using Serilog;
     using YoutubeExplode;
     using YoutubeExplode.Videos;
     using YoutubeExplode.Videos.Streams;
     using YouVid.io___Youtube_Video_Downloader.Models;
-
     public class YoutubeService
     {
 
@@ -92,6 +91,13 @@
                         response.VideoTitle = response.VideoTitle.Replace(".mp4", "") + "_normal.mp4";
                         break;
                     case ProcessSettings.High:
+                         string toEnhanceVideoFile = Path.Combine(tempDir, Path.GetTempFileName() + ".mp4");
+                        response.VideoStream.Position = 0;
+                {
+                    case ProcessSettings.Normal:
+                        response.VideoTitle = response.VideoTitle.Replace(".mp4", "") + "_normal.mp4";
+                        break;
+                    case ProcessSettings.High:
                         string toEnhanceVideoFile = Path.Combine(tempDir, Path.GetTempFileName() + ".mp4");
                         response.VideoStream.Position = 0;
                         response.VideoTitle = response.VideoTitle.Replace(".mp4", "") + "_high.mp4";
@@ -99,6 +105,7 @@
                         await EnhanceHigh(toEnhanceVideoFile, response.VideoStream, cancellationToken);
                         break;
                     default:
+                        throw new Exception("Invalid video setting given");
                         throw new Exception("Invalid video setting given");
                 }
 
