@@ -12,7 +12,7 @@ import {
 @Component({
   selector: "app-quality-selector",
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule], // Make sure CommonModule is imported
   template: `
     <div class="quality-selector">
       <button class="selector-button" (click)="toggleDropdown()">
@@ -26,10 +26,18 @@ import {
       >
         <div
           class="option"
-          *ngFor="let option of options"
+          *ngFor="let option of qualityOptions"
           (click)="selectQuality(option.value, option.key)"
         >
           {{ translate(option.key) }}
+        </div>
+ <div class="option" *ngFor="let option of formatOptions" (click)="selectFormat(option.value)">
+ {{ option.value }}
+ </div>
+ <div
+          class="option"
+          (click)="selectFormat(option.value)" // Corrected click handler
+        >
         </div>
       </div>
     </div>
@@ -139,14 +147,32 @@ import {
 })
 export class QualitySelectorComponent {
   @Output() qualityChange = new EventEmitter<string>();
-  
+  @Output() selectionChange = new EventEmitter<{ quality: string, format: string }>();
+
   options = [
-    { key: 'search.quality.normal', value: 'Normal' },
-    { key: 'search.quality.enhanced', value: 'Enhanced' }
+    { key: 'search.quality.highres', value: 'highres' },
+    { key: 'search.quality.1080p', value: '1080p' },
+    { key: 'search.quality.720p', value: '720p' },
+    { key: 'search.quality.480p', value: '480p' },
+    { key: 'search.quality.360p', value: '360p' },
+    { key: 'search.quality.240p', value: '240p' },
+    { key: 'search.quality.144p', value: '144p' },
+    { key: 'search.quality.audio', value: 'audio' },
   ];
 
+ qualityOptions = [
+    { key: 'search.quality.highres', value: 'highres' },
+    { key: 'search.quality.1080p', value: '1080p' },
+    { key: 'search.quality.720p', value: '720p' },
+    { key: 'search.quality.480p', value: '480p' },
+    { key: 'search.quality.360p', value: '360p' },
+    { key: 'search.quality.240p', value: '240p' },
+    { key: 'search.quality.144p', value: '144p' },
+    { key: 'search.quality.audio', value: 'audio' }, // Assuming 'audio' is a valid quality option
+  ];
+ formatOptions = [{ value: 'mp4' }, { value: 'webm' }];
   isOpen = false;
-  selectedQualityKey = 'search.quality.normal';
+  selectedQualityKey = 'search.quality.normal'; // Or set a default like 'search.quality.720p'
 
   constructor(private languageService: LanguageService) {
     // Subscribe to language changes to trigger re-render
@@ -161,9 +187,19 @@ export class QualitySelectorComponent {
     this.isOpen = !this.isOpen;
   }
 
+  selectedQuality: string = this.options[2].value; // Default to 720p
+  selectedFormat: string = this.formatOptions[0].value; // Default to mp4
+
   selectQuality(value: string, key: string) {
     this.selectedQualityKey = key;
-    this.qualityChange.emit(value);
+ this.selectedQuality = value;
+ this.emitSelectionChange();
+    this.isOpen = false; // Close dropdown after selection
+  }
+
+  selectFormat(value: string) {
+ this.selectedFormat = value;
+ this.emitSelectionChange();
     this.isOpen = false;
   }
 
@@ -171,5 +207,9 @@ export class QualitySelectorComponent {
     if (event.toState === "closed") {
       // Additional cleanup if needed
     }
+  }
+
+  emitSelectionChange() {
+ this.selectionChange.emit({ quality: this.selectedQuality, format: this.selectedFormat });
   }
 }

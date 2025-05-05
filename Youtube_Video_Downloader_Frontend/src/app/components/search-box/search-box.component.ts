@@ -2,14 +2,15 @@ import { Component, Output, EventEmitter } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { CommonModule } from "@angular/common";
 import { QualitySelectorComponent } from "./quality-selector/quality-selector.component";
-import { DownloadEvent } from "./interfaces/download.interface";
-import { LanguageService } from "../../services/language.service";
+import { SkeletonLoaderComponent } from "../loading/skeleton-loader/skeleton-loader.component";
+import { QueueService, VideoInQueueStatus } from "../../services/queue.service";
+import { interval, Subscription } from "rxjs";
 
-@Component({
+ @Component({
   selector: "app-search-box",
   standalone: true,
   imports: [FormsModule, CommonModule, QualitySelectorComponent],
-  template: `
+  template: `    
     <div class="search-container">
       <div class="input-group">
         <input
@@ -20,7 +21,7 @@ import { LanguageService } from "../../services/language.service";
           class="search-input"
           [class.disabled]="isLoading"
         />
-        <app-quality-selector (qualityChange)="onQualityChange($event)" />
+ <app-quality-selector (qualityChange)="onQualityChange($event)" (formatChange)="onFormatChange($event)" />
         <button
           (click)="onDownload()"
           class="download-button"
@@ -32,6 +33,11 @@ import { LanguageService } from "../../services/language.service";
           </span>
           <div class="loading-circle" [class.visible]="isLoading"></div>
         </button>
+      </div>
+
+      <div *ngIf="videoLoading">
+        <app-skeleton-loader></app-skeleton-loader>
+        <div class="download-progress">{{ downloadPercentage }}%</div>
       </div>
     </div>
   `,
@@ -155,6 +161,12 @@ import { LanguageService } from "../../services/language.service";
         }
       }
     `,
+ `
+      .download-progress {
+        margin-top: var(--spacing-2);
+        text-align: center;
+        color: var(--white);
+      }
   ],
 })
 export class SearchBoxComponent {
@@ -162,32 +174,59 @@ export class SearchBoxComponent {
   searchQuery = "";
   isLoading = false;
   selectedQuality = "Normal";
+  videoLoading = false;
+ selectedFormat = "mp4";
+  downloadPercentage = 0;
 
-  constructor(private languageService: LanguageService) {}
-
-  translate(key: string): string {
-    return this.languageService.getTranslation(key);
-  }
+  constructor() {}
+ private queueStatusSubscription: Subscription | undefined;
 
   onQualityChange(quality: string) {
     this.selectedQuality = quality;
   }
 
+ onFormatChange(format: string) {
+ this.selectedFormat = format;
+  }
+
   async onDownload() {
     if (this.searchQuery.trim() && !this.isLoading) {
       this.isLoading = true;
+      this.videoLoading = true;
+      this.downloadPercentage = 0;
+
+      // Stop any existing polling
+      if (this.queueStatusSubscription) {
+        this.queueStatusSubscription.unsubscribe();
+      }
 
       try {
-        this.search.emit({
-          query: this.searchQuery.trim(),
-          timestamp: Date.now(),
-          quality: this.selectedQuality,
-        });
-      } finally {
-        // Reset loading state after 2 seconds
-        setTimeout(() => {
+        const videoId = this.extractVideoId(this.searchQuery.trim()); // Assuming a method to extract video ID from URL
+        if (!videoId) {
+          console.error("Invalid YouTube URL");
+ this.videoLoading = false;
           this.isLoading = false;
-        }, 2000);
+          return;
+        }
+
+        const addedVideo = await this.queueService.addVideoToQueue(videoId, this.selectedFormat, this.selectedQuality).toPromise();
+        if (addedVideo) {
+          this.pollVideoStatus(videoId);
+        } else {
+          console.error("Failed to add video to queue");
+ this.videoLoading = false;
+          this.isLoading = false;
+        }
+      } catch (error) {
+        console.error("Error adding video to queue:", error);
+        this.videoLoading = false;
+        this.isLoading = false;
+      } finally {
+ // Reset search button loading state after 2 seconds
+ setTimeout(() => {
+          this.isLoading = false;
+          }
+        , 2000);
       }
     }
   }

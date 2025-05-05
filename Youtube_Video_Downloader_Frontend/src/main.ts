@@ -100,3 +100,14 @@ export class App {
 bootstrapApplication(App, {
   providers: [provideHttpClient(), provideAnimations(), LanguageService],
 });
+
+// Register Service Worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/video-cache-sw.js').then(registration => {
+      console.log('Service Worker registered: ', registration);
+    }).catch(error => {
+      console.log('Service Worker registration failed: ', error);
+    });
+  });
+}
